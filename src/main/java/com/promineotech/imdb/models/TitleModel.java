@@ -29,5 +29,4 @@ public class TitleModel {
   public void setReleasedYear(int releasedYear) {
     this.releasedYear = releasedYear;
   }
-  
 }
