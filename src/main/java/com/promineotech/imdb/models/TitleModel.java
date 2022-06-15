@@ -1,6 +1,10 @@
 package com.promineotech.imdb.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class TitleModel {
+  private final int MINIMUM_TITLE_RELEASE_YEAR = 1874;
+
   private String id;
   private String name;
   private int releasedYear;
@@ -28,5 +32,24 @@ public class TitleModel {
   }
   public void setReleasedYear(int releasedYear) {
     this.releasedYear = releasedYear;
+  }
+  
+  /**
+   * Checks to see if the title is valid.
+   * @param title The title to validate
+   * @return True if value, otherwise returns false.
+   */
+  @JsonIgnore
+  public boolean isValid() {
+    if ((getId() == null || getId().isEmpty())) {
+      return false;
+    }
+    if ((getName() == null) || (getName().isEmpty())) {
+      return false;
+    }
+    if (getReleasedYear() < MINIMUM_TITLE_RELEASE_YEAR) {
+      return false;
+    }
+    return true;
   }
 }

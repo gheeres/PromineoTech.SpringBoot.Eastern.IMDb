@@ -20,7 +20,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name="Titles")
 public class TitleController {
   private final int MAX_ITEMS_PER_REQUEST = 500;
-  private final int MINIMUM_TITLE_RELEASE_YEAR = 1874;
   
   //@Autowired
   private TitleService service;
@@ -51,35 +50,59 @@ public class TitleController {
     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Requested title was not found.");
   }
   
-  /**
-   * Checks to see if the title is valid.
-   * @param title The title to validate
-   * @return True if value, otherwise returns false.
-   */
-  private boolean isValid(TitleModel title) {
-    if ((title.getId() == null || title.getId().isEmpty())) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title ID is required.");
-    }
-    if ((title.getName() == null) || (title.getName().isEmpty())) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title name is required.");
-    }
-    if (title.getReleasedYear() < MINIMUM_TITLE_RELEASE_YEAR) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
-                "Title release year must be greater than or equal to " + 
-                MINIMUM_TITLE_RELEASE_YEAR);
-    }
-    return true;
-  }
-  
+ 
   @Operation(summary = "Creates a new title")
   @RequestMapping(value="/titles", method = RequestMethod.POST)
   public TitleModel create(@RequestBody TitleModel title) {
     if (title == null) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No title data provided.");
     }
-    if (isValid(title)) {
+    
+    if (title.isValid()) {
+      TitleModel result = service.create(title);
+      if (result != null) {
+        return result;
+      }
+      
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Data persistence failed. Title not saved.");
     }
     
-    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Invalid title data specified.");
+    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid title data specified.");
+  }
+  
+  @Operation(summary = "Updates or modifies an existing title")
+  @RequestMapping(value="/titles/{id}", method = RequestMethod.PUT)
+  public TitleModel update(@PathVariable String id, @RequestBody TitleModel title) {
+    if ((id == null) || (id.isEmpty())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No title id provided.");
+    }
+    if (title == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No title data provided.");
+    }
+    
+    if (title.isValid()) {
+      TitleModel result = service.update(id, title);
+      if (result != null) {
+        return result;
+      }
+      
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Data persistence failed. Title not saved.");
+    }
+    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid title data specified.");
+  }
+  
+  @Operation(summary = "Removes an existing title")
+  @RequestMapping(value="/titles/{id}", method = RequestMethod.DELETE)
+  public TitleModel delete(@PathVariable String id) {
+    if ((id == null) || (id.isEmpty())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No title id provided.");
+    }
+    
+    TitleModel result = service.delete(id);
+    if (result != null) {
+      return result;
+    }
+    
+    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Title with requested id was not found");
   }
 }

@@ -64,4 +64,72 @@ public class JdbcTitleRepository implements TitleRepository {
 
     return Optional.of(titles.get(0));
   }
+
+  @Override
+  public Optional<TitleModel> save(TitleModel input) {
+    if (input == null) {
+      return Optional.empty();
+    }
+
+    return save(input.getId(), input);
+  }
+
+  @Override
+  public Optional<TitleModel> save(String id, TitleModel input) {
+    if (input == null) {
+      return Optional.empty();
+    }
+    if (input.isValid()) {
+      Optional<TitleModel> existing = get(id);
+      String sql = null;
+      if (existing.isEmpty()) {
+        sql = "INSERT INTO title (title_id,content_type_id,primary_title,start_year) "
+            + "VALUES (:title_id,:content_type_id,:primary_title,:start_year);";
+      }
+      else {
+        sql = "UPDATE title SET title_id = :title_id, "
+                             + "content_type_id = :content_type_id, "
+                             + "primary_title = :primary_title, "
+                             + "start_year = :start_year "
+                         + "WHERE title_id = :existing_title_id;"; 
+      }
+      
+      // SQL
+      MapSqlParameterSource parameters = new MapSqlParameterSource();
+      parameters.addValue("title_id", input.getId());
+      parameters.addValue("primary_title", input.getName());
+      parameters.addValue("start_year", input.getReleasedYear());
+      parameters.addValue("content_type_id", 2);
+      parameters.addValue("existing_title_id", id);
+      
+      int rows = provider.update(sql, parameters);
+      if (rows == 1) {
+        // Log: Success - Created
+        return get(input.getId());
+      }
+      // Log: Error
+    }
+    
+    return Optional.empty();  }
+
+  @Override
+  public Optional<TitleModel> delete(String id) {
+    if ((id == null) || (id.isEmpty())) {
+      return Optional.empty();
+    }
+    
+    Optional<TitleModel> existing = get(id);
+    if (existing.isPresent()) {
+      // DELETE
+      String sql = "DELETE FROM title WHERE title_id = :title_id;";
+      MapSqlParameterSource parameters = new MapSqlParameterSource();
+      parameters.addValue("title_id", id);
+      
+      int rows = provider.update(sql, parameters);
+      if (rows == 1) {
+        return existing;
+      }
+    }
+    return Optional.empty();
+  }
 }

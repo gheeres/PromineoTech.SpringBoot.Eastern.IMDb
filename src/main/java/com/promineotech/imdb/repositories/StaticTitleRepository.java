@@ -32,4 +32,35 @@ public class StaticTitleRepository implements TitleRepository {
     return titles.stream().filter(title -> title.getId().equalsIgnoreCase(id))
                           .findFirst();
   }
+
+  @Override
+  public Optional<TitleModel> save(TitleModel input) {
+    if (input == null) {
+      return Optional.empty();
+    }
+    
+    return save(input.getId(), input);
+  }
+
+  @Override
+  public Optional<TitleModel> save(String id, TitleModel input) {
+    if (input == null) {
+      return Optional.empty();
+    }
+    
+    if (input.isValid()) {
+      // Check for existing value
+      // If found, update existing object reference
+      // else just add it.
+      titles.add(input);
+      return Optional.of(input);
+    }
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<TitleModel> delete(String id) {
+    // TODO Auto-generated method stub
+    return Optional.empty();
+  }
 }
